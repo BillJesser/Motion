@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { AlertTriangle, LocateFixed, MapPin, Search } from "lucide-react";
 import { searchAiEvents, searchEvents, type AiEvent, type MotionEvent } from "../../api/events";
-import { removeSavedEvent, saveEvent } from "../../api/users";
+import { getSavedEvents, removeSavedEvent, saveEvent } from "../../api/users";
 import { MotionEventCard } from "../../components/events/MotionEventCard";
 import { AiEventCard } from "../../components/events/AiEventCard";
 import { Button } from "../../components/ui/button";
@@ -68,8 +68,8 @@ function buildAddress(values: DiscoverFormValues) {
     .join(", ");
 }
 
-function buildSignature(event: AiEvent) {
-  return `${event.source_url ?? ""}::${event.title}::${event.start_date}`;
+function buildAiSignature(event: AiEvent) {
+  return (event.title ?? "").trim().toLowerCase();
 }
 
 export function DiscoverPage() {
@@ -118,14 +118,7 @@ export function DiscoverPage() {
   const [hasRestoredState, setHasRestoredState] = useState(false);
   const previousUserEmailRef = useRef<string | null>(null);
 
-  const savedMotionIds = useMemo(() => {
-    const ids = new Set<string>();
-    user?.savedEvents
-      ?.filter((item) => item.source === "motion")
-      .forEach((item) => ids.add(item.eventId));
-    return ids;
-  }, [user?.savedEvents]);
-
+  const [savedMotionIds, setSavedMotionIds] = useState<Set<string>>(new Set());
   const [savedAiSignatures, setSavedAiSignatures] = useState<Set<string>>(new Set());
 
   const [savingMotionId, setSavingMotionId] = useState<string | null>(null);
@@ -175,6 +168,43 @@ export function DiscoverPage() {
       setHasRestoredState(true);
     }
   }, [reset, user?.email]);
+
+  useEffect(() => {
+    const ids = new Set<string>();
+    user?.savedEvents
+      ?.filter((item) => item.source === "motion")
+      .forEach((item) => ids.add(item.eventId));
+    setSavedMotionIds(ids);
+  }, [user?.savedEvents]);
+
+  useEffect(() => {
+    if (!user?.email || !accessToken) return;
+    let cancelled = false;
+    const loadSavedEvents = async () => {
+      try {
+        const response = await getSavedEvents(user.email, accessToken);
+        if (cancelled) return;
+        const motionIds = new Set<string>();
+        const aiSignatures = new Set<string>();
+        response.items?.forEach((item) => {
+          if (item.source === "motion" && item.event?.eventId) {
+            motionIds.add(item.event.eventId);
+          }
+          if (item.source === "ai" && item.event) {
+            aiSignatures.add(buildAiSignature(item.event));
+          }
+        });
+        setSavedMotionIds(motionIds);
+        setSavedAiSignatures(aiSignatures);
+      } catch (error) {
+        console.error("Failed to load saved events", error);
+      }
+    };
+    loadSavedEvents();
+    return () => {
+      cancelled = true;
+    };
+  }, [accessToken, user?.email]);
 
   useEffect(() => {
     if (!hasRestoredState) return;
@@ -521,7 +551,7 @@ export function DiscoverPage() {
 
   const handleSaveAiEvent = async (event: AiEvent) => {
     if (!user || !accessToken) return;
-    const signature = buildSignature(event);
+    const signature = buildAiSignature(event);
     setSavingAiSignature(signature);
     try {
       const response = await saveEvent(
@@ -810,7 +840,7 @@ export function DiscoverPage() {
         {!loadingAi && aiEvents.length > 0 ? (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {aiEvents.map((event, index) => {
-              const signature = buildSignature(event);
+              const signature = buildAiSignature(event);
               return (
                 <AiEventCard
                   key={`${event.source_url ?? event.title}-${index}`}
