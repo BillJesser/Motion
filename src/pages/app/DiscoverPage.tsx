@@ -632,24 +632,26 @@ export function DiscoverPage() {
               </div>
             )}
 
-            <div className="grid gap-4 sm:grid-cols-4">
-              <div className="space-y-2 sm:col-span-2">
-                <Label htmlFor="city">City</Label>
-                <Input id="city" placeholder="Atlanta" {...register("city")} />
+            {locationMode === "manual" && (
+              <div className="grid gap-4 sm:grid-cols-4">
+                <div className="space-y-2 sm:col-span-2">
+                  <Label htmlFor="city">City</Label>
+                  <Input id="city" placeholder="Atlanta" {...register("city")} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="state">State / Region</Label>
+                  <Input id="state" placeholder="GA" {...register("state")} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="zip">ZIP code</Label>
+                  <Input id="zip" placeholder="30009" {...register("zip")} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="country">Country</Label>
+                  <Input id="country" placeholder="USA" {...register("country")} />
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="state">State / Region</Label>
-                <Input id="state" placeholder="GA" {...register("state")} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="zip">ZIP code</Label>
-                <Input id="zip" placeholder="30009" {...register("zip")} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="country">Country</Label>
-                <Input id="country" placeholder="USA" {...register("country")} />
-              </div>
-            </div>
+            )}
           </div>
 
           <div className="grid gap-4 sm:grid-cols-5">

@@ -3,17 +3,7 @@
 
   React + Vite frontend for the Motion event platform. Users can create an account, verify their email, sign in, discover community events, search the web for events with AI, save favourites, and publish their own events.
 
-  Motion talks to the Motion Backend (Cognito, API Gateway, Lambda). The following base URLs are baked into the app:
-
-  - Core API: `https://qekks9l4k1.execute-api.us-east-2.amazonaws.com`
-  - AI search: `https://uq65bozd66oybogxlvir2icqea0bzwxz.lambda-url.us-east-2.on.aws`
-
-  Override them in a local `.env` file if your stage uses a different host or path:
-
-  ```env
-  VITE_API_BASE_URL=https://example.execute-api.us-east-2.amazonaws.com/prod
-  VITE_API_SEARCH_AI_URL=https://example.lambda-url.us-east-2.on.aws
-  ```
+  Deployed preview: https://motion-eight-silk.vercel.app/signin
 
   ## Getting started
 
